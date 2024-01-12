@@ -1,8 +1,7 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from random import randint
-from scipy.optimize import curve_fit
+
 plt.style.use('bmh')
 
 x = [0]

@@ -1,9 +1,6 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from random import randint
-from scipy.optimize import curve_fit
-from scipy.interpolate import make_interp_spline, BSpline
 from scipy import interpolate
 
 
@@ -17,7 +14,7 @@ x = np.linspace(0, 82, 22)
 temp = interpolate.splrep(x, y)
 xnew = np.arange(0, 82, 0.2)
 ynew = interpolate.splev(xnew, temp)
-plt.plot(xnew, ynew,linewidth= 5)
+plt.plot(xnew, ynew, linewidth=5)
 
 minus_line_y = [0]
 minus_line_x = [0]
@@ -43,8 +40,7 @@ minus_line_y.append(ynew[i - 1])
 minus_line_x.append(xnew[i - 1])
 plus_line_y.append(ynew[i - 1])
 plus_line_x.append(xnew[i - 1])
-print(minus_line_x,minus_line_y)
-print(plus_line_x,plus_line_y)
+
 plt.plot(minus_line_x,minus_line_y,linewidth= 1, linestyle='dashed',marker='o')
 plt.plot(plus_line_x,plus_line_y,linewidth= 1, linestyle='dashed',marker='o')
 plt.style.use('bmh')
@@ -87,7 +83,6 @@ v, b = once(r, t)
 v.append((v[-1] + xnew[-1]) / 2)
 b.append((b[-1] + ynew[-1]) / 2)
 p, o = once(v, b)
-print(*p,*o , end=',,,')
 p.append((p[-1] + xnew[-1]) / 2)
 o.append((o[-1] + ynew[-1]) / 2)
 p.append(xnew[-1])
@@ -103,4 +98,3 @@ maxY = np.max(ynew)
 minY = np.min(ynew)
 print('maxX =', maxX, 'maxY =', maxY, 'minX =', minX, 'minY =', minY)
 plt.show()
-

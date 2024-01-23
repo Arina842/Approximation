@@ -105,6 +105,28 @@ def min_max_search(x: np.array, y: np.array) -> dict:
                 y_max_array.append(y[i])
                 x_max_array.append(x[i])
         i += 1
+    i=1
+    while i < len(y_max_array):
+        if (y.index(y_max_array[i])-y.index(y_max_array[i-1])) < 5:
+            if y_max_array[i] > y_max_array[i-1]:
+                y_max_array.remove(y_max_array[i-1])
+                x_max_array.remove(x_max_array[i-1])
+            elif y_max_array[i] < y_max_array[i-1]:
+                y_max_array.remove(y_max_array[i])
+                x_max_array.remove(x_max_array[i])
+        i+=1
+
+    i=1
+    while i < len(y_min_array):
+        if (y.index(y_min_array[i])-y.index(y_min_array[i-1])) < 5:
+            if y_min_array[i] < y_min_array[i-1]:
+                y_min_array.remove(y_min_array[i-1])
+                x_min_array.remove(x_min_array[i-1])
+            elif y_min_array[i] > y_min_array[i-1]:
+                y_min_array.remove(y_min_array[i])
+                x_min_array.remove(x_min_array[i])
+        i+=1
+
 
     plt.plot(x_min_array, y_min_array, linewidth=1, linestyle='dashed', marker='o',
              label='минимумы')  # строим графики минимумов
@@ -115,13 +137,11 @@ def min_max_search(x: np.array, y: np.array) -> dict:
     x_min_array.append(x[i - 1])
     y_max_array.append(y[i - 1])
     x_max_array.append(x[i - 1])
-    # print(*y_max_array)
+
     temp = interpolate.interp1d(x_min_array, y_min_array)
     x_min_array_new = x
     y_min_array_new = temp(x_min_array_new)
     
-    # print('y_max_array, y_min_array',y_max_array, y_min_array)
-    # print('x_max_array, x_min_array', x_max_array, x_min_array)
     temp = interpolate.interp1d(x_max_array, y_max_array)
     x_max_array_new = x
     y_max_array_new = temp(x_max_array_new)

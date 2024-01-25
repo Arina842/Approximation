@@ -202,7 +202,7 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     def surch_distance_min_max(x_middle_line_array: list, y_middle_line_array: list, x_min_array: list,
                                y_min_array: list, y_max_array, x_max_array: list):
         """
-        Функция для нахождения расстояния от вершин до средней линии
+        Функция для нахождения расстояния от вершин до средней линии и его сортировка по иксу
         :param x_middle_line_array: значения по иксу для средней линии
         :param y_middle_line_array: значения по иреку для средней линии
         :param x_min_array: значения по иксу для линии минимумов
@@ -241,9 +241,8 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
             i += 1
             distance_max.append(min(distance_comparison_max))
             distance_comparison_max = []
+          
         # Сортировка по иксу для расстояний от точек минимумов и максимумов до средней линии
-        print(distance_max)
-        print(distance_min)
         points_minimum = dict(zip(x_min_array, distance_max))
         points_maximum = dict(zip(x_max_array, distance_min))
         points_minimum.update(points_maximum)

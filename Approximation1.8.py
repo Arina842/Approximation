@@ -73,26 +73,23 @@ strain = np.array([0.0, 0.0015931005515946695, 0.002626969420715431, 0.003392996
                    0.02636028710353022, 0.0263618442451501, 0.02647758686954176, 0.026664338518962747,
                    0.02687292152983245, 0.02736166092799099, 0.028333467897468063, 0.02951031223280901])
 
+
 def timer(func):
     def wrapper(*args, **kwargs):
-        # start the timer
         start_time = time.time()
-        # call the decorated function
         result = func(*args, **kwargs)
-        # remeasure the time
         end_time = time.time()
-        # compute the elapsed time and print it
         execution_time = end_time - start_time
         print(f"Execution time: {execution_time} seconds")
-        # return the result of the decorated function execution
+
         return result
-    # return reference to the wrapper function
+
     return wrapper
 
 
 @timer
 def cyclic_strain_analyzer(x: np.array, y: np.array):
-    '''
+    """
     .....................
     Функция для  последовательного нахождения максимумов и минимумов,
     интерполировании их линий, нахождения средней линии, нахождения растояния
@@ -102,7 +99,7 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     :return: np.array(x_max_array_new), np.array(y_max_array_new), np.array(x_min_array_new), np.array(y_min_array_new),
             np.array(x_middle_line_array), np.array(y_middle_line_array), np.array(distance_min),
             np.array(distance_max), maximums,x_points,y_points
-    '''
+    """
 
     x = x.tolist()
     y = y.tolist()
@@ -111,7 +108,7 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     y_min_array = [0]
     x_max_array = [0]
 
-    #Цикл для нахождения точек минимума и максимума сравнивая текущую точку и четыре предыдущих
+    # Цикл для нахождения точек минимума и максимума сравнивая текущую точку и четыре предыдущих
     i = 4
     while i < (len(y)):
         if y[i - 3] < y[i - 2] and y[i - 2] > y[i-1]:
@@ -155,15 +152,15 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
             elif y_min_array[i] > y_min_array[i-1]:
                 y_min_array.remove(y_min_array[i])
                 x_min_array.remove(x_min_array[i])
-        i+=1
+        i += 1
 
-    #Добавление последнего значения исходного массива к линиям максимумов и минимумов
+    # Добавление последнего значения исходного массива к линиям максимумов и минимумов
     y_min_array.append(y[- 1])
     x_min_array.append(x[- 1])
     y_max_array.append(y[- 1])
     x_max_array.append(x[- 1])
 
-    #Сортировка по иксу для расстояний от точек минимумов и максимумов до средней линии
+    # Сортировка по иксу для расстояний от точек минимумов и максимумов до средней линии
     points_minimum = dict(zip(x_min_array, y_min_array))
     points_maximum = dict(zip(x_max_array, y_max_array))
     points_minimum.update(points_maximum)
@@ -171,33 +168,34 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     x_points = points_min_max.keys()
     y_points = points_min_max.values()
 
-    #Интерполяция линии минимумов
+    # Интерполяция линии минимумов
     temp = interpolate.interp1d(x_min_array, y_min_array)
     x_min_array_new = x
     y_min_array_new = temp(x_min_array_new)
 
-    #Интерполяция линии максимумов
+    # Интерполяция линии максимумов
     temp = interpolate.interp1d(x_max_array, y_max_array)
     x_max_array_new = x
     y_max_array_new = temp(x_max_array_new)
 
     @timer
     def surch_middle_line(x_max_array: np.array, y_max_array: np.array, y_min_array: np.array):
-        '''
+        """
         Функция для нахождения средней линии по середине интерполированных линий максимумов и минимумов
-        :param x_max_array:
-        :param y_max_array:
-        :param y_min_array:
+        :param x_max_array: значения по иксу для интерполированной линии максимумов
+        :param y_max_array: значения по игреку для интерполированной линии максимумов
+        :param y_min_array: значения по игреку для интерполированной линии минимумов
         :return: x_middle_line_array, y_middle_line_array
-        '''
+        """
 
         x_middle_line_array = []
         y_middle_line_array = []
 
-        #Нахождение средней линии как половины разницы значений линий минимумов и максимумов по прямой иксов с 0-й позиции
+        # Нахождение средней линии как половины разницы значений линий минимумов и максимумов по прямой иксов с
+        # 0-й позиции
         i = 0
         while i < (len(x_min_array_new)):
-            x_middle_line_array.append(x_max_array[i] )
+            x_middle_line_array.append(x_max_array[i])
             y_middle_line_array.append((y_max_array[i] + y_min_array[i]) / 2)
             i += 1
         return x_middle_line_array, y_middle_line_array
@@ -206,25 +204,25 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
                                                                  y_max_array_new, y_min_array_new)
 
     @timer
-    def surch_distance_min_max(x_middle_line_array: np.array, y_middle_line_array: np.array, x_min_array: np.array,
-                               y_min_array: np.array, y_max_array, x_max_array):
-        '''
+    def surch_distance_min_max(x_middle_line_array: list, y_middle_line_array: list, x_min_array: list,
+                               y_min_array: list, y_max_array, x_max_array: list):
+        """
         Функция для нахождения расстояния от вершин до средней линии
-        :param x_middle_line_array:
-        :param y_middle_line_array:
-        :param x_min_array:
-        :param y_min_array:
-        :param y_max_array:
-        :param x_max_array:
+        :param x_middle_line_array: значения по иксу для средней линии
+        :param y_middle_line_array: значения по иреку для средней линии
+        :param x_min_array: значения по иксу для линии минимумов
+        :param y_min_array: значения по игреку для линии минимумов
+        :param y_max_array:  значения по игреку для линии максимумов
+        :param x_max_array: значения по игреку для линии максимумов
         :return: distance_min, distance_max
-        '''
+        """
         distance_min = []
         distance_max = []
         distance_comparison_min = []
         distance_comparison_max = []
 
-        #Нахождение расстояния между средней линией и точек минимума по формуле для перпендикуляра от точки до прямой
-        #Перебираются для каждой точки значения всей средней линии.Не учитываются добавленные точки начала и конца
+        # Нахождение расстояния между средней линией и точек минимума по формуле для перпендикуляра от точки до прямой
+        # Перебираются для каждой точки значения всей средней линии.Не учитываются добавленные точки начала и конца
         i, k = 1, 0
         while i < (len(y_min_array)-1):
             while k < len(x_middle_line_array):
@@ -236,8 +234,8 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
             distance_min.append(min(distance_comparison_min))
             distance_comparison_min = []
 
-        #Нахождение расстояния между средней линией и точек максимума.Перебираются для каждой точки значения
-        #всей средней линии.Не учитываются добавленные точки начала и конца
+        # Нахождение расстояния между средней линией и точек максимума.Перебираются для каждой точки значения
+        # всей средней линии.Не учитываются добавленные точки начала и конца
         i, k = 1, 0
         while i < (len(y_max_array)-1):
             while k < len(x_middle_line_array):
@@ -253,27 +251,26 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     distance_min, distance_max = surch_distance_min_max(x_middle_line_array, y_middle_line_array, x_min_array,
                                                         y_min_array, y_max_array, x_max_array)
 
-    maxX = np.max(x)
-    minX = np.min(x)
-    maxY = np.max(y)
-    minY = np.min(y)
+    max_x = np.max(x)
+    min_x = np.min(x)
+    max_y = np.max(y)
+    min_y = np.min(y)
 
-    maximums = {'maxX': maxX, 'minX': minX, 'maxY': maxY, 'minY': minY}
+    maximums = {'maxX': max_x, 'minX': min_x, 'maxY': max_y, 'minY': min_y}
     return (np.array(x_max_array_new), np.array(y_max_array_new), np.array(x_min_array_new), np.array(y_min_array_new),
             np.array(x_middle_line_array), np.array(y_middle_line_array), np.array(distance_min),
-            np.array(distance_max), maximums,x_points,y_points)
+            np.array(distance_max), maximums, x_points, y_points)
 
 
 if __name__ == "__main__":
     plt.style.use('bmh')
     (x_max_array, y_max_array, x_min_array, y_min_array, x_middle_line_array, y_middle_line_array, distance_min,
-     distance_max, maximums,x_points,y_points) = cyclic_strain_analyzer(cycles, strain)
+     distance_max, maximums, x_points, y_points) = cyclic_strain_analyzer(cycles, strain)
 
-    plt.plot(x_points,y_points,color='orange')
+    plt.plot(x_points, y_points, color='orange')
     plt.ylabel('ε')
     plt.xlabel('τ')
     plt.title('График отклонений')
-    plt.legend()
     plt.show()
 
     plt.plot(x_middle_line_array, y_middle_line_array, label='средняя линия')

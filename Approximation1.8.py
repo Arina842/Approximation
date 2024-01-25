@@ -96,10 +96,12 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     .....................
     Функция для  последовательного нахождения максимумов и минимумов,
     интерполировании их линий, нахождения средней линии, нахождения растояния
-    от вершин до средней линии
+    от вершин до средней линии и построение графика зависимости расстояния от количества циклов
     :param x:
     :param y:
-    :return:x_max_array_new, y_max_array_new, x_min_array_new, y_min_array_new, x_middle_line_array, y_middle_line_array
+    :return: np.array(x_max_array_new), np.array(y_max_array_new), np.array(x_min_array_new), np.array(y_min_array_new),
+            np.array(x_middle_line_array), np.array(y_middle_line_array), np.array(distance_min),
+            np.array(distance_max), maximums,x_points,y_points
     '''
 
     x = x.tolist()
@@ -160,6 +162,8 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     x_min_array.append(x[- 1])
     y_max_array.append(y[- 1])
     x_max_array.append(x[- 1])
+
+    #Сортировка по иксу для расстояний от точек минимумов и максимумов до средней линии
     points_minimum = dict(zip(x_min_array, y_min_array))
     points_maximum = dict(zip(x_max_array, y_max_array))
     points_minimum.update(points_maximum)
@@ -167,9 +171,6 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     x_points = points_min_max.keys()
     y_points = points_min_max.values()
 
-
-
-    print(points_minimum)
     #Интерполяция линии минимумов
     temp = interpolate.interp1d(x_min_array, y_min_array)
     x_min_array_new = x
@@ -267,12 +268,14 @@ if __name__ == "__main__":
     plt.style.use('bmh')
     (x_max_array, y_max_array, x_min_array, y_min_array, x_middle_line_array, y_middle_line_array, distance_min,
      distance_max, maximums,x_points,y_points) = cyclic_strain_analyzer(cycles, strain)
+
     plt.plot(x_points,y_points,color='orange')
     plt.ylabel('ε')
     plt.xlabel('τ')
     plt.title('График отклонений')
     plt.legend()
     plt.show()
+
     plt.plot(x_middle_line_array, y_middle_line_array, label='средняя линия')
     plt.ylabel('ε')
     plt.xlabel('τ')

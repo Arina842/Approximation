@@ -176,7 +176,6 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
         '''
         Функция для нахождения средней линии по середине интерполированных линий максимумов и минимумов
         :param x_max_array:
-        :param x_min_array:
         :param y_max_array:
         :param y_min_array:
         :return: x_middle_line_array, y_middle_line_array

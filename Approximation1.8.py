@@ -75,7 +75,7 @@ strain = np.array([0.0, 0.0015931005515946695, 0.002626969420715431, 0.003392996
 
 
 def timer(func):
-  
+
     def wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
@@ -161,13 +161,7 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     y_max_array.append(y[- 1])
     x_max_array.append(x[- 1])
 
-    # Сортировка по иксу для расстояний от точек минимумов и максимумов до средней линии
-    points_minimum = dict(zip(x_min_array, y_min_array))
-    points_maximum = dict(zip(x_max_array, y_max_array))
-    points_minimum.update(points_maximum)
-    points_min_max = dict(sorted(points_minimum.items()))
-    x_points = points_min_max.keys()
-    y_points = points_min_max.values()
+
 
     # Интерполяция линии минимумов
     temp = interpolate.interp1d(x_min_array, y_min_array)
@@ -247,9 +241,19 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
             i += 1
             distance_max.append(min(distance_comparison_max))
             distance_comparison_max = []
-        return distance_min, distance_max
+        # Сортировка по иксу для расстояний от точек минимумов и максимумов до средней линии
+        print(distance_max)
+        print(distance_min)
+        points_minimum = dict(zip(x_min_array, distance_max))
+        points_maximum = dict(zip(x_max_array, distance_min))
+        points_minimum.update(points_maximum)
+        points_min_max = dict(sorted(points_minimum.items()))
+        x_points = points_min_max.keys()
+        y_points = points_min_max.values()
 
-    distance_min, distance_max = surch_distance_min_max(x_middle_line_array, y_middle_line_array, x_min_array,
+        return distance_min, distance_max,x_points, y_points
+
+    distance_min, distance_max,x_points,y_points = surch_distance_min_max(x_middle_line_array, y_middle_line_array, x_min_array,
                                                         y_min_array, y_max_array, x_max_array)
 
     max_x = np.max(x)

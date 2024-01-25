@@ -160,7 +160,16 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     x_min_array.append(x[- 1])
     y_max_array.append(y[- 1])
     x_max_array.append(x[- 1])
+    points_minimum = dict(zip(x_min_array, y_min_array))
+    points_maximum = dict(zip(x_max_array, y_max_array))
+    points_minimum.update(points_maximum)
+    points_min_max = dict(sorted(points_minimum.items()))
+    x_points = points_min_max.keys()
+    y_points = points_min_max.values()
 
+
+
+    print(points_minimum)
     #Интерполяция линии минимумов
     temp = interpolate.interp1d(x_min_array, y_min_array)
     x_min_array_new = x
@@ -172,7 +181,7 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     y_max_array_new = temp(x_max_array_new)
 
     @timer
-    def surch_middle_line(x_max_array, y_max_array, y_min_array):
+    def surch_middle_line(x_max_array: np.array, y_max_array: np.array, y_min_array: np.array):
         '''
         Функция для нахождения средней линии по середине интерполированных линий максимумов и минимумов
         :param x_max_array:
@@ -251,16 +260,24 @@ def cyclic_strain_analyzer(x: np.array, y: np.array):
     maximums = {'maxX': maxX, 'minX': minX, 'maxY': maxY, 'minY': minY}
     return (np.array(x_max_array_new), np.array(y_max_array_new), np.array(x_min_array_new), np.array(y_min_array_new),
             np.array(x_middle_line_array), np.array(y_middle_line_array), np.array(distance_min),
-            np.array(distance_max), maximums)
+            np.array(distance_max), maximums,x_points,y_points)
 
 
 if __name__ == "__main__":
     plt.style.use('bmh')
     (x_max_array, y_max_array, x_min_array, y_min_array, x_middle_line_array, y_middle_line_array, distance_min,
-     distance_max, maximums) = cyclic_strain_analyzer(cycles, strain)
+     distance_max, maximums,x_points,y_points) = cyclic_strain_analyzer(cycles, strain)
+    plt.plot(x_points,y_points,color='orange')
+    plt.ylabel('ε')
+    plt.xlabel('τ')
+    plt.title('График отклонений')
+    plt.legend()
+    plt.show()
     plt.plot(x_middle_line_array, y_middle_line_array, label='средняя линия')
-    plt.plot(x_min_array, y_min_array, linewidth=1, linestyle='dashed')
-    plt.plot(x_max_array, y_max_array, linewidth=1, linestyle='dashed')
+    plt.ylabel('ε')
+    plt.xlabel('τ')
+    plt.plot(x_min_array, y_min_array, linewidth=1, linestyle='dashed', label='линия минимумов')
+    plt.plot(x_max_array, y_max_array, linewidth=1, linestyle='dashed', label='линия максимумов')
     plt.plot(cycles, strain)
     plt.legend()
     plt.show()

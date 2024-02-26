@@ -1,0 +1,257 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from dataclasses import dataclass
+from typing import Union
+from scipy import interpolate
+from scipy.interpolate import CubicSpline
+import time
+
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"Execution time: {execution_time} seconds")
+
+        return result
+
+    return wrapper
+
+@dataclass
+class Line:
+    x: Union[np.array, list] = None
+    y: Union[np.array, list] = None
+
+@dataclass
+class MinMaxProcessing:
+    max_points: Line = None     # точки максимумов
+    min_points: Line = None     # точки минимумов
+    max_line: Line = None       # линия максимумов
+    min_line: Line = None       # линия минимумов
+    middle_line: Line = None    # средняя линяя
+    distance_line: Line = None  # линия удаления максимумов и минимумов от средней линии
+    distance_min: list = None,
+    distance_max: list = None,
+    maximums: dict = None
+@timer
+def min_max_analyzer(x: np.array, y: np.array) -> MinMaxProcessing:
+    """
+    .....................
+    Функция для  последовательного нахождения максимумов и минимумов,
+    интерполировании их линий, нахождения средней линии, нахождения растояния
+    от вершин до средней линии и построение графика зависимости расстояния от количества циклов
+    :param x:
+    :param y:
+    :return: np.array(x_max_array_new), np.array(y_max_array_new), np.array(x_min_array_new), np.array(y_min_array_new),
+            np.array(x_middle_line_array), np.array(y_middle_line_array), np.array(distance_min),
+            np.array(distance_max), maximums,x_points,y_points
+    """
+    max_x = np.max(x)
+    min_x = np.min(x)
+    max_y = np.max(y)
+    min_y = np.min(y)
+
+    #применяем кубически сплайн для  последующего нахождения знаков производной
+    cs = CubicSpline(x, y)
+    y = y.tolist()
+    x = x.tolist()
+    m = cs(x, 1)
+    k = m.tolist()
+    print('x', len(x))
+
+
+
+    y_max_array = [0]
+    x_min_array = [0]
+    y_min_array = [0]
+    x_max_array = [0]
+    # Находим точку изменения знака производной, сравнивая текущее значение с предыдущим
+    i = 1
+    while i < len(k):
+        if k[i - 1] > 0 and k[i] < 0:
+            if y[i - 1] > y[i]:
+                y_max_array.append(y[i - 1])
+                x_max_array.append(x[i - 1])
+            elif y[i - 1] < y[i]:
+                y_max_array.append(y[i])
+                x_max_array.append(x[i])
+        elif k[i - 1] < 0 and k[i] > 0:
+            if y[i - 1] < y[i]:
+                y_min_array.append(y[i - 1])
+                x_min_array.append(x[i - 1])
+            elif y[i - 1] > y[i]:
+                y_min_array.append(y[i])
+                x_min_array.append(x[i])
+        i += 1
+    print('x_min_array_start', len(x_min_array))
+    print('x_max_array_start', len(x_max_array))
+
+
+    # Цикл для удаления точек максимума, если расстояние между ними менее 5 точек.
+    # Сравнивается текущее значение с предыдущим
+    i = 2
+    while i < len(y_max_array):
+        if (y.index(y_max_array[i]) - y.index(y_max_array[i - 1])) < 5:
+            if y_max_array[i] > y_max_array[i - 1]:
+                y_max_array.remove(y_max_array[i - 1])
+                x_max_array.remove(x_max_array[i - 1])
+            elif y_max_array[i] < y_max_array[i - 1]:
+                y_max_array.remove(y_max_array[i])
+                x_max_array.remove(x_max_array[i])
+        i += 1
+
+
+    # Цикл для удаления точек минимума, если расстояние между ними менее 10 точек.
+    # Сравнивается текущее значение с предыдущим
+    i = 2
+    while i < len(y_min_array):
+       if (y.index(y_min_array[i]) - y.index(y_min_array[i - 1])) < 5:
+            if y_min_array[i] < y_min_array[i - 1]:
+                y_min_array.remove(y_min_array[i-1])
+                x_min_array.remove(x_min_array[i-1])
+            elif y_min_array[i] > y_min_array[i - 1]:
+                y_min_array.remove(y_min_array[i])
+                x_min_array.remove(x_min_array[i])
+       i += 1
+    # Цикл для удаления точек максимума, если между ними разница по игреку больше половины значения последующей точки.
+    # Нулевое значение ноль, поэтому отсчёт с 2-го элемента
+    i = 2
+    while i < (len(y_max_array)):
+        if y_max_array[i]-y_max_array[i-1]> (y_max_array[i]/2) :
+            y_max_array.remove(y_max_array[i-1])
+            x_max_array.remove(x_max_array[i-1])
+        i+=1
+    # Цикл для удаления точек максимума, если между ними разница по игреку больше половины 1/4 разницы общего максимума к общему минимуму по игреку.
+    # Нулевое значение ноль, поэтому отсчёт с 2-го элемента
+    i = 2
+    while i < (len(y_min_array)):
+        if y_min_array[i]-y_min_array[i-1] > ((max_y-min_y)/4):
+            y_min_array.remove(y_min_array[i])
+            x_min_array.remove(x_min_array[i])
+        i+=1
+
+
+    # Добавление последнего значения исходного массива к линиям максимумов и минимумов
+    y_min_array.append(y[- 1])
+    x_min_array.append(x[- 1])
+    y_max_array.append(y[- 1])
+    x_max_array.append(x[- 1])
+    print('x_min_array', len(x_min_array))
+    print('x_max_array', len(x_max_array))
+
+    # Интерполяция линии минимумов
+    temp = interpolate.interp1d(x_min_array, y_min_array)
+    x_min_array_line = x
+    y_min_array_line = temp(x_min_array_line)
+
+    # Интерполяция линии максимумов
+    temp = interpolate.interp1d(x_max_array, y_max_array)
+    x_max_array_line = x
+    y_max_array_line = temp(x_max_array_line)
+
+    x_middle_line_array = []
+    y_middle_line_array = []
+
+    print('y_max_array_line', len(y_max_array_line))
+    # Нахождение средней линии как половины разницы значений линий минимумов и максимумов по прямой иксов с
+    # 0-й позиции
+    i = 0
+    while i < (len(x_min_array_line)):
+        x_middle_line_array.append(x_max_array_line[i])
+        y_middle_line_array.append((y_max_array_line[i] + y_min_array_line[i]) / 2)
+        i += 1
+    print('x_middle_line_array', len(x_middle_line_array))
+    def surch_distance_min_max(x_middle_line_array: list, y_middle_line_array: list, x_min_array: list,
+                               y_min_array: list, y_max_array, x_max_array: list):
+        """
+        Функция для нахождения расстояния от вершин до средней линии и его сортировка по иксу
+        :param x_middle_line_array: значения по иксу для средней линии
+        :param y_middle_line_array: значения по иреку для средней линии
+        :param x_min_array: значения по иксу для линии минимумов
+        :param y_min_array: значения по игреку для линии минимумов
+        :param y_max_array:  значения по игреку для линии максимумов
+        :param x_max_array: значения по игреку для линии максимумов
+        :return: distance_min, distance_max
+        """
+        distance_min = []
+        distance_max = []
+        distance_comparison_min = []
+        distance_comparison_max = []
+
+        # Нахождение расстояния между средней линией и точек минимума по формуле для перпендикуляра от точки до прямой
+        # Перебираются для каждой точки значения всей средней линии.Не учитываются добавленные точки начала и конца
+        i, k = 1, 0
+        while i < (len(y_min_array) - 1):
+            while k < len(x_middle_line_array):
+                distance_comparison_min.append(np.sqrt(
+                    (x_min_array[i] - x_middle_line_array[k]) ** 2 + (y_min_array[i] - y_middle_line_array[k]) ** 2))
+                k += 1
+            k = 0
+            i += 1
+            distance_min.append(min(distance_comparison_min))
+            distance_comparison_min = []
+
+        # Нахождение расстояния между средней линией и точек максимума.Перебираются для каждой точки значения
+        # всей средней линии.Не учитываются добавленные точки начала и конца
+        i, k = 1,0
+        while i < (len(y_max_array) - 1):
+            k = (x_max_array_line.index(x_max_array[i])-10)
+            while k < (x_max_array_line.index(x_max_array[i])+10):
+                distance_comparison_max.append(np.sqrt(
+                    (x_max_array[i] - x_middle_line_array[k]) ** 2 + (y_max_array[i] - y_middle_line_array[k]) ** 2))
+                k += 1
+            i += 1
+            distance_max.append(min(distance_comparison_max))
+            distance_comparison_max = []
+
+        # Сортировка по иксу для расстояний от точек минимумов и максимумов до средней линии
+        points_minimum = dict(zip(x_min_array, distance_max))
+        points_maximum = dict(zip(x_max_array, distance_min))
+        points_minimum.update(points_maximum)
+        points_min_max = dict(sorted(points_minimum.items()))
+        x_points = points_min_max.keys()
+        y_points = points_min_max.values()
+        print('x_points', len(x_points))
+        return distance_min, distance_max, x_points, y_points
+
+    distance_min, distance_max, x_points, y_points = surch_distance_min_max(x_middle_line_array, y_middle_line_array,
+                                                                            x_min_array,
+                                                                            y_min_array, y_max_array, x_max_array)
+
+    maximums = {'maxX': max_x, 'minX': min_x, 'maxY': max_y, 'minY': min_y}
+
+    return MinMaxProcessing(
+        max_points=Line(
+            x=x_max_array,
+            y=y_max_array
+        ),
+        min_points=Line(
+            x=x_min_array,
+            y=y_min_array
+        ),
+        max_line=Line(
+            x=x_max_array_line,
+            y=y_max_array_line
+        ),
+        min_line=Line(
+            x=x_min_array_line,
+            y=y_min_array_line
+        ),
+        middle_line=Line(
+                x=x_middle_line_array,
+                y=y_middle_line_array
+            ),
+        distance_line=Line(
+                x=list(x_points),
+                y=list(y_points)
+            ),
+        distance_min=distance_min,
+        distance_max=distance_max,
+        maximums=maximums
+
+    )
+
+
+
